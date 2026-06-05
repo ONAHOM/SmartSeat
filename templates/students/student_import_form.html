@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Импорт учеников из файла | Класс {{ classroom.number }}-{{ classroom.letter }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .import-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 10px 0;
+    }
+
+    .import-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 25px;
+    }
+
+    .instruction-box {
+        background: #f0fdf4;
+        border-left: 4px solid #2ecc71;
+        padding: 20px;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+
+    .instruction-box strong {
+        color: #1e3a1e;
+    }
+
+    /* Стилизация таблицы-примера для учителя */
+    .example-table-wrapper {
+        overflow-x: auto;
+        margin: 15px 0 25px 0;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .example-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.85rem;
+        background: #f8fafc;
+    }
+
+    .example-table th {
+        background: #edf2f7;
+        color: #4a5568;
+        padding: 10px 12px;
+        font-weight: 700;
+        border-bottom: 2px solid #cbd5e1;
+        white-space: nowrap;
+    }
+
+    .example-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+        font-family: monospace;
+    }
+
+    .example-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Оформление полей формы */
+    .form-group-file {
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        text-align: center;
+        transition: border-color 0.2s;
+    }
+
+    .form-group-file:hover {
+        border-color: #3498db;
+    }
+
+    .form-group-file input[type="file"] {
+        font-size: 0.95rem;
+        color: #4a5568;
+        cursor: pointer;
+    }
+
+    .form-errors {
+        background: #fff5f5;
+        border-left: 4px solid #e74c3c;
+        padding: 12px 15px;
+        color: #c53030;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Кнопки действий */
+    .actions-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #3498db;
+        color: #ffffff;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    }
+
+    .btn-submit:hover {
+        background-color: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(52, 152, 219, 0.3);
+    }
+
+    /* Кнопка скачивания шаблона Excel */
+    .btn-download-template {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #2ecc71;
+        color: #ffffff;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(46, 204, 113, 0.15);
+    }
+
+    .btn-download-template:hover {
+        background-color: #27ae60;
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.25);
+    }
+
+    .link-cancel {
+        color: #718096;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+
+    .link-cancel:hover {
+        color: #2d3748;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="import-container">
+    
+    <div style="margin-bottom: 25px;">
+        <h2 style="margin: 0 0 5px 0; color: #2c3e50;">Пакетный импорт учащихся</h2>
+        <span style="color: #95a5a6;">Загрузка списка класса в {{ classroom.number }}-{{ classroom.letter }}</span>
+    </div>
+
+    <div class="import-card">
+        <div class="instruction-box">
+            <h4 style="margin: 0 0 10px 0; color: #1e3a1e; display: flex; align-items: center; gap: 8px;">
+                <span>📋</span> Инструкция:
+            </h4>
+            1. Создайте или откройте таблицу в программе <strong>Excel</strong> или <strong>Google Таблицы</strong>.<br>
+            2. Заполните данные строго в соответствии с порядком столбцов, указанным в примере ниже.<br>
+            3. Сохраните документ, выбрав формат файла <strong>CSV (разделители — точка с запятой) (*.csv)</strong>.<br>
+            4. Обязательно убедитесь, что первая строка содержит заголовки — алгоритм автоматически пропустит её.<br>
+            5. Значения зрения и успеваемости вводите через <strong>точку</strong> (например, <code>-1.5</code> или <code>4.25</code>).
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="margin: 0; color: #4a5568;">Шаблон структуры таблицы (как должно быть в Excel):</h4>
+            <a href="{% url 'student:download_template' %}" class="btn-download-template">
+                📥 Скачать готовый шаблон CSV
+            </a>
+        </div>
+        
+        <div class="example-table-wrapper">
+            <table class="example-table">
+                <thead>
+                    <tr>
+                        <th>ФИО ученика</th>
+                        <th>Зрение (диоптрии)</th>
+                        <th>Слух (0-3)</th>
+                        <th>Группа здоровья (1-5)</th>
+                        <th>Рост (см)</th>
+                        <th>Средний балл (GPA)</th>
+                        <th>Общительность (1-3)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Иванов Иван Иванович</td>
+                        <td>0.0</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td>165</td>
+                        <td>4.50</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>Петров Петр Петрович</td>
+                        <td>-2.5</td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td>172</td>
+                        <td>3.85</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>Сидорова Анна Сергеевна</td>
+                        <td>0.0</td>
+                        <td>2</td>
+                        <td>3</td>
+                        <td>158</td>
+                        <td>4.90</td>
+                        <td>1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {% if form.errors %}
+        <div class="form-errors">
+            <strong>Пожалуйста, исправьте ошибки в файле:</strong>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div style="margin-top: 5px;">• {{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <div style="margin-top: 5px;">• {{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group-file">
+                <p style="margin: 0 0 12px 0; font-weight: 600; color: #4a5568;">Выберите подготовленный CSV файл с компьютера</p>
+                {{ form.file }}
+                {% if form.file.help_text %}
+                    <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: #718096;">{{ form.file.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <div class="actions-row">
+                <button type="submit" class="btn-submit">
+                    🚀 Запустить импорт списка
+                </button>
+                <a href="{% url 'classroom:detail' classroom.pk %}" class="link-cancel">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

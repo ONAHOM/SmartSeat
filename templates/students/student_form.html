@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Редактирование: {{ object.full_name }}{% else %}Добавить ученика в {{ classroom.number }}-{{ classroom.letter }}{% endif %}
+{% endblock %}
+{% block extra_css %}
+<style>
+    .form-wrapper {
+        max-width: 750px;
+        margin: 40px auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+    }
+
+    .form-header {
+        margin-bottom: 35px;
+        border-bottom: 2px solid #f7fafc;
+        padding-bottom: 20px;
+    }
+
+    .form-header h2 {
+        color: #2d3748;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .form-header p {
+        color: #718096;
+        margin-top: 8px;
+        font-size: 1rem;
+    }
+
+    /* Стилизация полей Django */
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        color: #2d3748;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        background-color: #fff;
+    }
+
+    /* Кастомные стили для полей выбора (MultipleSelect для друзей/врагов) */
+    .form-group select[multiple] {
+        height: 150px;
+        padding: 10px;
+    }
+
+    .form-group select[multiple] option {
+        padding: 8px 12px;
+        margin-bottom: 4px;
+        border-radius: 6px;
+        transition: background 0.2s;
+    }
+
+    .form-group select[multiple] option:checked {
+        background: #0b63f6 linear-gradient(0deg, #0b63f6 0%, #0b63f6 100%);
+        color: white;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus {
+        outline: none;
+        border-color: #0b63f6;
+        box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.1);
+    }
+
+    /* Сообщения об ошибках */
+    .error-msg {
+        color: #e53e3e;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Кнопки управления */
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 40px;
+    }
+
+    .btn-submit {
+        flex: 2;
+        background: #0b63f6;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        background: #084ebc;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(11, 99, 246, 0.2);
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: #f7fafc;
+        color: #4a5568;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-cancel:hover {
+        background: #edf2f7;
+        color: #2d3748;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <h2>
+                {% if object %}📝 Изменение данных ученика{% else %}👤 Добавление нового ученика{% endif %}
+            </h2>
+            <p>
+                Класс: 
+                <strong>
+                    {% if object %}
+                        {{ object.classroom.number }}-{{ object.classroom.letter }}
+                    {% else %}
+                        {{ classroom.number }}-{{ classroom.letter }}
+                    {% endif %}
+                </strong>
+            </p>
+        </header>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <small style="color: #a0aec0; display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <span class="error-msg">⚠️ {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if object %}Сохранить изменения{% else %}Добавить ученика{% endif %}
+                </button>
+                
+                <!-- Безопасное определение возврата: проверяется наличие объекта редактирования -->
+                <a href="{% if object %}{% url 'classroom:detail' object.classroom.pk %}{% else %}{% url 'classroom:detail' classroom.pk %}{% endif %}" class="btn-cancel">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

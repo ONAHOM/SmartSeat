@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Настройка класса{% else %}Новый класс{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wrapper {
+        max-width: 700px;
+        margin: 40px auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+    }
+
+    .form-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .form-header h2 {
+        color: #2d3748;
+        font-size: 1.85rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .form-header p {
+        color: #718096;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    /* Сетка для числовых полей (Ряды и Парты) */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        color: #2d3748;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #0b63f6;
+        box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.1);
+    }
+
+    .error-msg {
+        color: #e53e3e;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 35px;
+    }
+
+    .btn-submit {
+        flex: 2;
+        background: #0b63f6;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        background: #084ebc;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(11, 99, 246, 0.2);
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: #ffffff;
+        color: #718096;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        background: #f7fafc;
+        color: #2d3748;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <h2>{% if object %}⚙️ Настройка класса{% else %}🏫 Новый класс{% endif %}</h2>
+            <p>Укажите параметры помещения для расчёта рассадки</p>
+        </header>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.number.id_for_label }}">Параллель (Номер)</label>
+                    {{ form.number }}
+                    {% if form.number.errors %}<span class="error-msg">{{ form.number.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.letter.id_for_label }}">Литера (Буква)</label>
+                    {{ form.letter }}
+                    {% if form.letter.errors %}<span class="error-msg">{{ form.letter.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.rows_count.id_for_label }}">Количество рядов</label>
+                    {{ form.rows_count }}
+                    {% if form.rows_count.errors %}<span class="error-msg">{{ form.rows_count.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.desks_per_row.id_for_label }}">Парт в ряду</label>
+                    {{ form.desks_per_row }}
+                    {% if form.desks_per_row.errors %}<span class="error-msg">{{ form.desks_per_row.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if object %}Обновить данные{% else %}Создать кабинет{% endif %}
+                </button>
+                <a href="{% url 'classroom:list' %}" class="btn-cancel">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

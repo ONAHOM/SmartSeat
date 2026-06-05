@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Импорт аудиторий{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wrapper {
+        max-width: 700px;
+        margin: 40px auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e1e8ed;
+    }
+
+    .form-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .form-header h2 {
+        color: #2c3e50;
+        font-size: 1.85rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .form-header p {
+        color: #7f8c8d;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #2c3e50;
+        background-color: #f8fafc;
+    }
+
+    .csv-example {
+        background: #f3e8ff;
+        border: 1px dashed #9b59b6;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: #4a2074;
+        line-height: 1.5;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 35px;
+    }
+
+    .btn-submit {
+        flex: 2;
+        background: #9b59b6;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: 0.5s;
+        box-shadow: 0 5px 15px 0 rgba(155, 89, 182, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translate(0, -3px);
+        box-shadow: 0 20px 40px 0 rgba(155, 89, 182, 0.4);
+        background: #805ad5;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: transparent;
+        color: #7f8c8d;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        border: 2px solid #e1e8ed;
+        transition: 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background: #edf2f7;
+        color: #2c3e50;
+    }
+
+    .error-msg {
+        color: #742a2a;
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <h2>🏫 Пакетный импорт аудиторий</h2>
+            <p>Загрузите список учебных кабинетов и физических залов проведения</p>
+        </header>
+
+        <div class="csv-example">
+            <strong>Требуемый формат CSV файла (Номер, Ряды, Места в ряду, Проверяющий):</strong><br>
+            401, 3, 4, Иванов Иван Иванович<br>
+            102Б, 4, 5, Смирнова Анна Владимировна
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.file.id_for_label }}">Файл таблицы аудиторий (.csv)</label>
+                {{ form.file }}
+                {% if form.file.errors %}<span class="error-msg">{{ form.file.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Импортировать залы</button>
+                <a href="{% url 'olympiads:event_detail' event.pk %}" class="btn-cancel">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

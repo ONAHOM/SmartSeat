@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SmartSeat{% endblock %}</title>
+    <style>
+        :root { 
+            --sidebar-width: 280px; /* Убедитесь, что это совпадает с шириной в sidebar.html */
+        }
+        
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            min-height: 100vh; 
+            background: #f4f7f6;
+            color: #2d3748;
+        }
+
+        /* Базовый стиль контента */
+        .main-content {
+            min-height: 100vh;
+            padding: 40px;
+            box-sizing: border-box;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Когда пользователь вошел (есть фиксированный сайдбар) */
+        .auth-layout .main-content {
+            margin-left: var(--sidebar-width);
+        }
+
+        /* Когда пользователя нет (есть фиксированный хедер) */
+        .guest-layout .main-content {
+            margin-left: 0;
+            padding-top: 100px; /* Отступ под высоту хедера */
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body class="{% if user.is_authenticated %}auth-layout{% else %}guest-layout{% endif %}">
+
+    {% if user.is_authenticated %}
+        {% include "includes/sidebar.html" %}
+    {% else %}
+        {% include "includes/header.html" %}
+    {% endif %}
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

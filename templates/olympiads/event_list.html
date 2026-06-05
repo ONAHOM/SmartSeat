@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+* {
+    box-sizing: border-box;
+}
+.classroom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* Дизайн карточки олимпиады */
+.class-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e1e8ed;
+    transition: 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.class-card:hover {
+    border-color: #dd6b20; /* Оранжевый акцентный цвет для олимпиад */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.class-header {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.class-info {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    line-height: 1.4;
+}
+
+.status-badge {
+    margin-top: 15px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: inline-block;
+    text-align: center;
+}
+
+.status-ok { background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; }
+.status-none { background: #fff5f5; color: #742a2a; border: 1px solid #fed7d7; }
+
+/* Кнопка "+ Создать олимпиаду" */
+.btn-new {
+    display: block;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #dd6b20;
+    border: 2px solid #dd6b20;
+    background: transparent;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px 0 rgba(221, 107, 32, 0.2);
+    transition: 0.5s;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.btn-new:hover {
+    transform: translate(0, -3px);
+    box-shadow: 0 20px 40px 0 rgba(221, 107, 32, 0.4);
+    background: rgba(221, 107, 32, 0.05);
+}
+{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 30px;">Мои олимпиадные мероприятия</h2>
+
+<div class="classroom-grid">
+    {% for event in events %}
+    <a href="{% url 'olympiads:event_detail' event.pk %}" class="class-card">
+        <div>
+            <div class="class-header">{{ event.name }}</div>
+            <div class="class-info">
+                📌 Направление: {{ event.subject|default:"Не указано" }}<br>
+                📅 Дата: {{ event.date|date:"d.m.Y H:i"|default:"Не назначена" }}<br>
+                🏫 Аудиторий задействовано: {{ event.classrooms.count }}
+            </div>
+        </div>
+        
+        <div class="status-badge {% if event.classrooms.exists %}status-ok{% else %}status-none{% endif %}">
+            {% if event.classrooms.exists %}
+                ✅ Аудитории готовы к расчету
+            {% else %}
+                ⚠️ Требуется добавить залы
+            {% endif %}
+        </div>
+    </a>
+    {% empty %}
+    <p>У вас пока нет созданных олимпиадных мероприятий.</p>
+    {% endfor %}
+</div>
+
+<a href="{% url 'olympiads:event_create' %}" class="btn-new">
+    + СОЗДАТЬ НОВУЮ ОЛИМПИАДУ
+</a>
+{% endblock %}

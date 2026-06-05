@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        max-width: 450px;
+        margin: 80px auto;
+    }
+
+    .auth-card {
+        background: white;
+        padding: 45px;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .auth-header h2 {
+        color: #1a202c;
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .auth-header p {
+        color: #718096;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    /* Ошибки входа (например, неверный пароль) */
+    .error-alert {
+        background: #fff5f5;
+        color: #c53030;
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+        border: 1px solid #feb2b2;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        font-size: 1rem;
+        color: #2d3748;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #0b63f6;
+        box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.1);
+    }
+
+    .btn-login {
+        width: 100%;
+        background: #0b63f6;
+        color: white;
+        border: none;
+        padding: 18px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+
+    .btn-login:hover {
+        background: #084ebc;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(11, 99, 246, 0.25);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid #f7fafc;
+        font-size: 0.95rem;
+        color: #718096;
+    }
+
+    .auth-footer a {
+        color: #0b63f6;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <header class="auth-header">
+            <h2>С возвращением!</h2>
+            <p>Войдите в свой профиль учителя</p>
+        </header>
+
+        {% if form.errors %}
+            <div class="error-alert">
+                ⚠️ Неверное имя пользователя или пароль
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Пароль</label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="btn-login">Войти в систему</button>
+        </form>
+
+        <div class="auth-footer">
+            Впервые здесь? <a href="{% url 'registration' %}">Создать аккаунт</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

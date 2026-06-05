@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация в системе{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Центрирование формы на странице */
+    .auth-wrapper {
+        max-width: 500px;
+        margin: 60px auto;
+    }
+
+    .auth-card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        border: 1px solid #edf2f7;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .auth-header h2 {
+        color: #1a202c;
+        font-size: 1.85rem;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .auth-header p {
+        color: #718096;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    /* Стилизация полей Django Form */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #2d3748;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #0b63f6;
+        box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.1);
+    }
+
+    /* Список подсказок (например, требования к паролю) */
+    .help-text {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        margin-top: 6px;
+        line-height: 1.4;
+    }
+
+    .error-msg {
+        color: #e53e3e;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Кнопки */
+    .btn-register {
+        width: 100%;
+        background: #0b63f6;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+
+    .btn-register:hover {
+        background: #084ebc;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(11, 99, 246, 0.2);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #f7fafc;
+        font-size: 0.95rem;
+        color: #718096;
+    }
+
+    .auth-footer a {
+        color: #0b63f6;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <header class="auth-header">
+            <h2>Создать аккаунт</h2>
+            <p>Добро пожаловать в систему умной рассадки</p>
+        </header>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <div class="help-text">{{ field.help_text }}</div>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <span class="error-msg">⚠️ {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn-register">Зарегистрироваться</button>
+        </form>
+
+        <div class="auth-footer">
+            Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

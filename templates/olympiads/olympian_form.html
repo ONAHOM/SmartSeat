@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Редактирование участника{% else %}Новый участник{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wrapper {
+        max-width: 800px;
+        margin: 40px auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e1e8ed;
+    }
+
+    .form-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .form-header h2 {
+        color: #2c3e50;
+        font-size: 1.85rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .form-header p {
+        color: #7f8c8d;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #dd6b20;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f8fafc;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Двухколоночная сетка параметров */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .form-group input, 
+    .form-group select {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #2c3e50;
+        transition: 0.3s;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #dd6b20;
+        box-shadow: 0 0 0 4px rgba(221, 107, 32, 0.15);
+    }
+
+    /* Блок командного взаимодействия */
+    .team-box {
+        background: #fdf6ee;
+        border: 1px dashed #fcb968;
+        padding: 25px;
+        border-radius: 12px;
+        margin-top: 10px;
+        margin-bottom: 24px;
+    }
+
+    .error-msg {
+        color: #742a2a;
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 35px;
+    }
+
+    .btn-submit {
+        flex: 2;
+        background: #dd6b20;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: 0.5s;
+        box-shadow: 0 5px 15px 0 rgba(221, 107, 32, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translate(0, -3px);
+        box-shadow: 0 20px 40px 0 rgba(221, 107, 32, 0.4);
+        background: #c05621;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: transparent;
+        color: #7f8c8d;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        border: 2px solid #e1e8ed;
+        transition: 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background: #edf2f7;
+        color: #2c3e50;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <h2>{% if object %}⚙️ Редактирование карточки участника{% else %}👤 Регистрация участника{% endif %}</h2>
+            <p>Заполните физиологические параметры и мета-данные олимпийца</p>
+        </header>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="section-title">Основная информация</div>
+            
+            <div class="form-group">
+                <label for="{{ form.full_name.id_for_label }}">ФИО участника</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}<span class="error-msg">{{ form.full_name.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.school.id_for_label }}">Учебное заведение (Школа / Лицей)</label>
+                    {{ form.school }}
+                    {% if form.school.errors %}<span class="error-msg">{{ form.school.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.origin_class.id_for_label }}">Класс обучения (Параллель)</label>
+                    {{ form.origin_class }}
+                    {% if form.origin_class.errors %}<span class="error-msg">{{ form.origin_class.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            {% if object.classroom.event.is_team_event or event.is_team_event or view.get_context_data.event.is_team_event %}
+            <div class="section-title">Командный регламент</div>
+            <div class="team-box">
+                <div class="form-grid">
+                    {% if form.team_choice %}
+                    <div class="form-group">
+                        <label for="{{ form.team_choice.id_for_label }}">{{ form.team_choice.label }}</label>
+                        {{ form.team_choice }}
+                        {% if form.team_choice.errors %}<span class="error-msg">{{ form.team_choice.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if form.new_team_name %}
+                    <div class="form-group">
+                        <label for="{{ form.new_team_name.id_for_label }}">{{ form.new_team_name.label }}</label>
+                        {{ form.new_team_name }}
+                        {% if form.new_team_name.errors %}<span class="error-msg">{{ form.new_team_name.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="section-title">Физиологические параметры (для ГА рассадки)</div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.height.id_for_label }}">Рост (см)</label>
+                    {{ form.height }}
+                    {% if form.height.errors %}<span class="error-msg">{{ form.height.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.eyesight.id_for_label }}">Острота зрения (диоптрии)</label>
+                    {{ form.eyesight }}
+                    {% if form.eyesight.errors %}<span class="error-msg">{{ form.eyesight.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.hearing.id_for_label }}">Острота слуха</label>
+                    {{ form.hearing }}
+                    {% if form.hearing.errors %}<span class="error-msg">{{ form.hearing.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.health_group.id_for_label }}">Группа здоровья</label>
+                    {{ form.health_group }}
+                    {% if form.health_group.errors %}<span class="error-msg">{{ form.health_group.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="section-title">Дополнительные метрики базиса</div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.gpa.id_for_label }}">Средний балл успеваемости (GPA)</label>
+                    {{ form.gpa }}
+                    {% if form.gpa.errors %}<span class="error-msg">{{ form.gpa.errors.0 }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.sociability.id_for_label }}">Уровень общительности</label>
+                    {{ form.sociability }}
+                    {% if form.sociability.errors %}<span class="error-msg">{{ form.sociability.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if object %}Сохранить изменения{% else %}Зарегистрировать участника{% endif %}
+                </button>
+                
+                <a href="{% if object %}{% url 'olympiads:classroom_detail' object.classroom.pk %}{% else %}{% url 'olympiads:classroom_detail' view.kwargs.classroom_id %}{% endif %}" class="btn-cancel">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

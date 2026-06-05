@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Удаление участника: {{ object.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-wrapper {
+        max-width: 650px;
+        margin: 60px auto;
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .delete-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .delete-header h2 {
+        color: #2c3e50;
+        font-size: 2.2rem; 
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .delete-header h2 span {
+        font-size: 2.5rem;
+    }
+
+    .delete-subtext {
+        color: #7f8c8d;
+        font-size: 1.2rem;
+        margin-top: 12px;
+        font-weight: 400;
+    }
+
+    .warning-label {
+        color: #2c3e50;
+        font-size: 0.9rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    /* Карточка с инфой */
+    .info-card {
+        background: #ffffff;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 32px;
+    }
+
+    .info-card ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .info-card li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #7f8c8d;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8fafc;
+    }
+
+    .info-card li:last-child { border-bottom: none; }
+
+    .info-card li::before {
+        content: "•";
+        color: #dd6b20;
+        font-weight: bold;
+    }
+
+    /* Кнопки */
+    .form-actions {
+        display: flex;
+        gap: 16px;
+    }
+
+    .btn-delete {
+        flex: 1;
+        background: #dd6b20;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.5s;
+        box-shadow: 0 5px 15px 0 rgba(221, 107, 32, 0.2);
+    }
+
+    .btn-delete:hover {
+        background: #c05621;
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px 0 rgba(221, 107, 32, 0.4);
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: transparent;
+        color: #7f8c8d;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        border: 2px solid #e1e8ed;
+        transition: 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background: #edf2f7;
+        color: #2c3e50;
+        border-color: #cbd5e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-wrapper">
+    <div class="delete-header">
+        <h2><span>⚠️</span> Удалить участника?</h2>
+        <p class="delete-subtext">Вы собираетесь исключить пользователя <strong>{{ object.full_name }}</strong>.</p>
+    </div>
+
+    <span class="warning-label">Последствия удаления профиля:</span>
+    <div class="info-card">
+        <ul>
+            <li>Участник будет полностью убран из списков текущей аудитории №{{ object.classroom.number }}</li>
+            <li>Его физиологические показатели (рост, зрение) аннулируются в матрице ограничений зала</li>
+            <li>Текущая схема рассадки потребует повторного пересчета генетическим алгоритмом олимпиады</li>
+            {% if object.classroom.event.is_team_event and object.team %}
+                <li>Человек будет отвязан от своей команды ({{ object.team.name }})</li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn-delete">Подтвердить удаление</button>
+            <a href="{% url 'olympiads:classroom_detail' object.classroom.pk %}" class="btn-cancel">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

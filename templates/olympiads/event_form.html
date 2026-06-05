@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if object %}Настройка мероприятия{% else %}Новое мероприятие{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-wrapper {
+        max-width: 700px;
+        margin: 40px auto;
+    }
+
+    .form-card {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e1e8ed;
+    }
+
+    .form-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .form-header h2 {
+        color: #2c3e50;
+        font-size: 1.85rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .form-header p {
+        color: #7f8c8d;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    /* Сетка для смежных полей формы */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+
+    .form-group input, 
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        font-size: 1rem;
+        color: #2c3e50;
+        transition: 0.3s;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #dd6b20;
+        box-shadow: 0 0 0 4px rgba(221, 107, 32, 0.15);
+    }
+
+    /* Ряд чекбоксов опций */
+    .checkbox-row {
+        display: flex;
+        gap: 30px;
+        margin: 10px 0 24px;
+        background: #f8fafc;
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid #e1e8ed;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+        cursor: pointer;
+        transform: scale(1.15);
+        accent-color: #dd6b20;
+    }
+
+    .checkbox-group label {
+        margin-bottom: 0;
+        cursor: pointer;
+        user-select: none;
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .error-msg {
+        color: #742a2a;
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 35px;
+    }
+
+    .btn-submit {
+        flex: 2;
+        background: #dd6b20;
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: 0.5s;
+        box-shadow: 0 5px 15px 0 rgba(221, 107, 32, 0.2);
+    }
+
+    .btn-submit:hover {
+        transform: translate(0, -3px);
+        box-shadow: 0 20px 40px 0 rgba(221, 107, 32, 0.4);
+        background: #c05621;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: transparent;
+        color: #7f8c8d;
+        text-align: center;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        border: 2px solid #e1e8ed;
+        transition: 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background: #edf2f7;
+        color: #2c3e50;
+        border-color: #cbd5e0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <header class="form-header">
+            <h2>{% if object %}⚙️ Настройка мероприятия{% else %}🏆 Новое мероприятие{% endif %}</h2>
+            <p>Укажите параметры и регламент проведения испытания</p>
+        </header>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Название мероприятия / Олимпиады</label>
+                {{ form.name }}
+                {% if form.name.errors %}<span class="error-msg">{{ form.name.errors.0 }}</span>{% endif %}
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}">Предмет / Направление</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}<span class="error-msg">{{ form.subject.errors.0 }}</span>{% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.date.id_for_label }}">Дата проведения</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}<span class="error-msg">{{ form.date.errors.0 }}</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="checkbox-row">
+                <div class="checkbox-group">
+                    {{ form.is_team_event }}
+                    <label for="{{ form.is_team_event.id_for_label }}">Командная олимпиада</label>
+                </div>
+                <div class="checkbox-group">
+                    {{ form.pc_mode }}
+                    <label for="{{ form.pc_mode.id_for_label }}">Режим компьютеров</label>
+                </div>
+            </div>
+            
+            {% if form.is_team_event.errors %}<span class="error-msg">{{ form.is_team_event.errors.0 }}</span>{% endif %}
+            {% if form.pc_mode.errors %}<span class="error-msg">{{ form.pc_mode.errors.0 }}</span>{% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    {% if object %}Сохранить изменения{% else %}Зарегистрировать мероприятие{% endif %}
+                </button>
+                <a href="{% url 'olympiads:event_list' %}" class="btn-cancel">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
