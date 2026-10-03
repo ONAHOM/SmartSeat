@@ -1,0 +1,3 @@
+## 2024-10-04 - O(N) database queries during mass assignments
+**Learning:** Found an N+1 query issue in `CalculateGlobalOlympicSeatingView.post` where `.get()` and `.save()` were being run individually in a loop over all event participants.
+**Action:** Always replace `.save()` in loops with a list append followed by a `Model.objects.bulk_update(list_of_objects, ['field_name'])` for large batch operations, and use dictionary maps to cache related lookup models instead of querying the database on each iteration.
