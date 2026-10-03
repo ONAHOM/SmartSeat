@@ -461,19 +461,30 @@ class CalculateGlobalOlympicSeatingView(LoginRequiredMixin, View):
             # Шаг 2: Фиксация распределения в БД внутри транзакции
             with transaction.atomic():
                 updated_teams = set()
+                olympians_to_update = []
+                teams_to_update = []
+
+                # ⚡ Bolt: Cache classrooms to avoid O(N) database lookups
+                classrooms_map = {c.id: c for c in classrooms}
                 
                 for classroom_id, olympians in allocation_result.items():
-                    classroom_obj = classrooms.get(id=classroom_id)
+                    classroom_obj = classrooms_map.get(classroom_id)
                     
                     for olympian in olympians:
                         olympian.classroom = classroom_obj
-                        olympian.save()
+                        olympians_to_update.append(olympian)
                         
                         if event.is_team_event and olympian.team_id and (olympian.team_id not in updated_teams):
                             team_obj = olympian.team
                             team_obj.classroom = classroom_obj
-                            team_obj.save()
+                            teams_to_update.append(team_obj)
                             updated_teams.add(olympian.team_id)
+
+                # ⚡ Bolt: Bulk update to avoid N+1 queries during saving
+                if olympians_to_update:
+                    Olympian.objects.bulk_update(olympians_to_update, ['classroom'])
+                if teams_to_update:
+                    Team.objects.bulk_update(teams_to_update, ['classroom'])
             
             # Шаг 3: Поочередный запуск локального генетического алгоритма оптимизации мест для каждого зала
             successful_rooms = 0
