@@ -92,12 +92,12 @@
             <div class="class-info">
                 📌 Направление: {{ event.subject|default:"Не указано" }}<br>
                 📅 Дата: {{ event.date|date:"d.m.Y H:i"|default:"Не назначена" }}<br>
-                🏫 Аудиторий задействовано: {{ event.classrooms.count }}
+                🏫 Аудиторий задействовано: {{ event.classroom_count }}
             </div>
         </div>
         
-        <div class="status-badge {% if event.classrooms.exists %}status-ok{% else %}status-none{% endif %}">
-            {% if event.classrooms.exists %}
+        <div class="status-badge {% if event.classroom_count %}status-ok{% else %}status-none{% endif %}">
+            {% if event.classroom_count %}
                 ✅ Аудитории готовы к расчету
             {% else %}
                 ⚠️ Требуется добавить залы

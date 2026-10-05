@@ -1,0 +1,3 @@
+## 2024-05-15 - Django N+1 optimization via query annotation
+**Learning:** Using template `.count()` or `.exists()` inside a loop on a related manager like `cls.students.count` creates N+1 database queries. A context processor provides `sidebar_classes`, meaning the list of classes is identical to `classrooms` but when the template iterated over `sidebar_classes`, it wouldn't benefit from annotations on the main View's queryset.
+**Action:** Annotate list querysets with `.annotate(student_count=Count('students'))` and iterate over the view's context object (`classrooms` instead of `sidebar_classes`) in the template, then use `{{ cls.student_count }}` to fetch counts without additional queries.

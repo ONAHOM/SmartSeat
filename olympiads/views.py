@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import csv
 import io
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -25,7 +25,10 @@ class OlympicEventListView(LoginRequiredMixin, ListView):
     context_object_name = 'events'
 
     def get_queryset(self):
-        return OlympicEvent.objects.filter(creator=self.request.user)
+        # ⚡ Bolt: Annotated classroom count to prevent N+1 queries
+        return OlympicEvent.objects.filter(
+            creator=self.request.user
+        ).annotate(classroom_count=Count('classrooms'))
 
 
 class OlympicEventDetailView(LoginRequiredMixin, DetailView):
@@ -140,16 +143,16 @@ class OlympianCreateView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['classroom'] = get_object_or_404(
-            OlympicClassroom, 
-            pk=self.kwargs['classroom_id'], 
+            OlympicClassroom,
+            pk=self.kwargs['classroom_id'],
             event__creator=self.request.user
         )
         return kwargs
 
     def form_valid(self, form):
         classroom = get_object_or_404(
-            OlympicClassroom, 
-            pk=self.kwargs['classroom_id'], 
+            OlympicClassroom,
+            pk=self.kwargs['classroom_id'],
             event__creator=self.request.user
         )
         form.instance.classroom = classroom
@@ -227,7 +230,7 @@ class OlympicImportView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         event = get_object_or_404(OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user)
         csv_file = form.cleaned_data['file']
-        
+
         # Разрешение конфликтов кодировки файла
         try:
             file_data = csv_file.read().decode('utf-8')
@@ -236,7 +239,7 @@ class OlympicImportView(LoginRequiredMixin, FormView):
             file_data = csv_file.read().decode('cp1251')
 
         io_string = io.StringIO(file_data)
-        
+
         try:
             dialect = csv.Sniffer().sniff(io_string.read(2048), delimiters=',;')
             io_string.seek(0)
@@ -246,7 +249,7 @@ class OlympicImportView(LoginRequiredMixin, FormView):
             reader = csv.reader(io_string)
 
         header = next(reader, None)  # Пропускаем заголовок таблицы
-        
+
         olympians_to_create = []
         errors = []
         row_num = 1
@@ -256,20 +259,20 @@ class OlympicImportView(LoginRequiredMixin, FormView):
             # Пропуск пустых строк
             if not row or not any(field.strip() for field in row):
                 continue
-                
+
             if len(row) < 5:
                 errors.append(f"Строка {row_num}: Недостаточно колонок (ожидается минимум 5: ФИО, Рост, Зрение, Школа, Класс).")
                 continue
-                
+
             full_name = row[0].strip()
-            
+
             # Безопасный парсинг роста (Защита от ValueError при сдвиге колонок)
             try:
                 height = int(row[1].strip() or 160)
             except ValueError:
                 errors.append(f"Строка {row_num} [{full_name}]: Неверный формат роста '{row[1]}' (ожидается целое число).")
                 continue
-            
+
             # Безопасный парсинг зрения (Защита от ValueError)
             try:
                 eyesight_str = row[2].strip().replace(',', '.')
@@ -277,10 +280,10 @@ class OlympicImportView(LoginRequiredMixin, FormView):
             except ValueError:
                 errors.append(f"Строка {row_num} [{full_name}]: Неверный формат зрения '{row[2]}' (ожидается число, например -5.5).")
                 continue
-                
+
             school = row[3].strip()
             origin_class = row[4].strip()
-            
+
             # Название команды (6-я колонка, если передана)
             team_name = row[5].strip() if len(row) > 5 else ""
 
@@ -329,7 +332,7 @@ class OlympicImportView(LoginRequiredMixin, FormView):
 
                 # Массовое создание участников
                 Olympian.objects.bulk_create(olympians_to_create)
-                
+
                 # Создание команд и линковка структур (только для командных турниров)
                 if event.is_team_event:
                     inserted_olympians = Olympian.objects.filter(
@@ -337,19 +340,19 @@ class OlympicImportView(LoginRequiredMixin, FormView):
                         school__in=[o.school for o in olympians_to_create],
                         classroom=None
                     )
-                    
+
                     team_cache = {}
                     for o_inserted in inserted_olympians:
                         matching_source = next(
-                            obj for obj in olympians_to_create 
+                            obj for obj in olympians_to_create
                             if obj.full_name == o_inserted.full_name and obj.school == o_inserted.school
                         )
                         t_name = matching_source._temp_team_name
-                        
+
                         if t_name not in team_cache:
                             new_team = Team.objects.create(name=t_name, classroom=default_classroom)
                             team_cache[t_name] = new_team
-                            
+
                         o_inserted.team = team_cache[t_name]
                         o_inserted.save()
 
@@ -376,7 +379,7 @@ class OlympicClassroomImportView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         event = get_object_or_404(OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user)
         csv_file = form.cleaned_data['file']
-        
+
         try:
             file_data = csv_file.read().decode('utf-8')
         except UnicodeDecodeError:
@@ -384,7 +387,7 @@ class OlympicClassroomImportView(LoginRequiredMixin, FormView):
             file_data = csv_file.read().decode('cp1251')
 
         io_string = io.StringIO(file_data)
-        
+
         try:
             dialect = csv.Sniffer().sniff(io_string.read(2048), delimiters=',;')
             io_string.seek(0)
@@ -394,7 +397,7 @@ class OlympicClassroomImportView(LoginRequiredMixin, FormView):
             reader = csv.reader(io_string)
 
         header = next(reader, None)
-        
+
         classrooms_to_create = []
         row_num = 1
 
@@ -402,20 +405,20 @@ class OlympicClassroomImportView(LoginRequiredMixin, FormView):
             row_num += 1
             if not row or not any(field.strip() for field in row):
                 continue
-                
+
             if len(row) < 3:
                 messages.error(self.request, f"Строка {row_num}: Недостаточно колонок (ожидается минимум 3: Номер, Ряды, Места в ряду).")
                 return self.render_to_response(self.get_context_data(form=form))
-                
+
             number = row[0].strip()[:10]
-            
+
             try:
                 rows_count = int(row[1].strip() or 3)
                 desks_per_row = int(row[2].strip() or 4)
             except ValueError:
                 messages.error(self.request, f"Строка {row_num}: Размеры рядов и парт должны быть целыми числами.")
                 return self.render_to_response(self.get_context_data(form=form))
-                
+
             inspector = row[3].strip() if len(row) > 3 else ""
 
             classroom = OlympicClassroom(
@@ -440,62 +443,62 @@ class CalculateGlobalOlympicSeatingView(LoginRequiredMixin, View):
     def post(self, request, event_id):
         event = get_object_or_404(OlympicEvent, pk=event_id, creator=request.user)
         classrooms = event.classrooms.all()
-        
+
         # Получение полного пулла участников (включая нераспределенные сущности после CSV)
         event_olympians = Olympian.objects.filter(
             Q(classroom__event=event) | Q(team__classroom__event=event)
         ).distinct()
-        
+
         if not classrooms.exists():
             messages.error(request, "Невозможно запустить расчет: в мероприятии нет аудиторий.")
             return redirect('olympiads:event_detail', pk=event.pk)
-            
+
         if not event_olympians.exists():
             messages.error(request, "Невозможно запустить расчет: отсутствуют зарегистрированные участники.")
             return redirect('olympiads:event_detail', pk=event.pk)
-            
+
         try:
             # Шаг 1: Равномерное Round-Robin распределение участников/команд по залам
             allocation_result = distribute_olympians_to_classrooms(event, event_olympians, classrooms)
-            
+
             # Шаг 2: Фиксация распределения в БД внутри транзакции
             with transaction.atomic():
                 updated_teams = set()
-                
+
                 for classroom_id, olympians in allocation_result.items():
                     classroom_obj = classrooms.get(id=classroom_id)
-                    
+
                     for olympian in olympians:
                         olympian.classroom = classroom_obj
                         olympian.save()
-                        
+
                         if event.is_team_event and olympian.team_id and (olympian.team_id not in updated_teams):
                             team_obj = olympian.team
                             team_obj.classroom = classroom_obj
                             team_obj.save()
                             updated_teams.add(olympian.team_id)
-            
+
             # Шаг 3: Поочередный запуск локального генетического алгоритма оптимизации мест для каждого зала
             successful_rooms = 0
             for room in classrooms:
                 success = run_genetic_algorithm_for_classroom(room.id)
                 if success:
                     successful_rooms += 1
-            
+
             if successful_rooms == classrooms.count():
                 messages.success(
-                    request, 
+                    request,
                     f"Глобальный балансировщик распределил {event_olympians.count()} участников. "
                     f"Генетический алгоритм успешно построил карты рассадки для всех залов ({successful_rooms}/{classrooms.count()})."
                 )
             else:
                 messages.warning(
-                    request, 
+                    request,
                     f"Участники распределены по залам, но карты рассадки построены частично: "
                     f"успешно {successful_rooms} из {classrooms.count()} аудиторий. Проверьте вместимость залов."
                 )
-            
+
         except ValueError as e:
             messages.error(request, f"Ошибка оптимизации: {str(e)}")
-            
+
         return redirect('olympiads:event_detail', pk=event.pk)
