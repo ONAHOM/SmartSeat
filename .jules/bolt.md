@@ -1,0 +1,3 @@
+## 2024-05-18 - N+1 in Templates
+**Learning:** In Django templates, calling `{{ object.related_objects.all }}` in a for loop triggers lazy fetching, but accessing another relation inside that loop (`{{ related_object.another_relation.name }}`) triggers an N+1 query problem. This specific architecture makes template N+1s a recurring issue without proper prefetching.
+**Action:** When a template loops over a related manager (`classroom.olympians.all`) and accesses a foreign key (`olympian.team.name`), use `prefetch_related` combined with `Prefetch` and `select_related` in the view to optimize queries before they reach the template.
