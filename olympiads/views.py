@@ -8,6 +8,7 @@ import csv
 import io
 from django.db import transaction
 from django.db.models import Q
+from django.db.models import Prefetch
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -96,7 +97,15 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'classroom'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        # ⚡ Bolt: Prevent N+1 queries when template iterates over classroom.olympians.all
+        # and accesses olympian.team
+        olympians_prefetch = Prefetch(
+            'olympians',
+            queryset=Olympian.objects.select_related('team')
+        )
+        return OlympicClassroom.objects.filter(
+            event__creator=self.request.user
+        ).prefetch_related(olympians_prefetch, 'teams')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -111,7 +120,15 @@ class OlympicClassroomUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'olympiads/classroom_form.html'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        # ⚡ Bolt: Prevent N+1 queries when template iterates over classroom.olympians.all
+        # and accesses olympian.team
+        olympians_prefetch = Prefetch(
+            'olympians',
+            queryset=Olympian.objects.select_related('team')
+        )
+        return OlympicClassroom.objects.filter(
+            event__creator=self.request.user
+        ).prefetch_related(olympians_prefetch, 'teams')
 
     def get_success_url(self):
         return reverse('olympiads:event_detail', kwargs={'pk': self.object.event.id})
@@ -122,7 +139,15 @@ class OlympicClassroomDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'olympiads/classroom_confirm_delete.html'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        # ⚡ Bolt: Prevent N+1 queries when template iterates over classroom.olympians.all
+        # and accesses olympian.team
+        olympians_prefetch = Prefetch(
+            'olympians',
+            queryset=Olympian.objects.select_related('team')
+        )
+        return OlympicClassroom.objects.filter(
+            event__creator=self.request.user
+        ).prefetch_related(olympians_prefetch, 'teams')
 
     def get_success_url(self):
         return reverse('olympiads:event_detail', kwargs={'pk': self.object.event.id})

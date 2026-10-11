@@ -1,0 +1,3 @@
+## 2024-05-24 - Django Template Iteration N+1 Optimization
+**Learning:** When a Django view iterates over a related manager in the template (e.g., `classroom.olympians.all`) and accesses nested fields like `olympian.team.name`, setting context variables like `context['olympians'] = ...` doesn't prevent N+1 queries if the template references the manager directly.
+**Action:** Always override `get_queryset` on the View to apply `prefetch_related` (with a `Prefetch` object if we need `select_related` on the inner items) so the related objects are cached on the model instance that the template iterates over.
