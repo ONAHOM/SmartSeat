@@ -1,0 +1,3 @@
+## 2024-10-14 - [Django DetailView N+1 Optimization]
+**Learning:** In Django DetailViews, accessing reverse relations (like `classroom.olympians.all`) inside the template triggers an N+1 query problem if those nested items further access their own foreign keys (like `olympian.team`). While it's tempting to put `prefetch_related` everywhere, it should strictly be applied to views where the iteration actually happens (DetailView/ListView) and avoided in forms (UpdateView/DeleteView) to prevent overfetching.
+**Action:** Always check templates associated with DetailViews and ListViews for nested loop accesses, and use `Prefetch('related_name', queryset=Model.objects.select_related('nested_fk'))` in `get_queryset` to eliminate the N+1.
