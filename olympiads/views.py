@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import csv
 import io
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -82,7 +82,9 @@ class OlympicClassroomCreateView(LoginRequiredMixin, CreateView):
     template_name = 'olympiads/classroom_form.html'
 
     def form_valid(self, form):
-        event = get_object_or_404(OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user)
+        event = get_object_or_404(
+            OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user
+        )
         form.instance.event = event
         return super().form_valid(form)
 
@@ -96,7 +98,13 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'classroom'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        # ⚡ Bolt Optimization: Fix N+1 queries when loading olympians and their teams
+        # Without this, iterating over `classroom.olympians.all` in the template
+        # and accessing `olympian.team` would trigger an extra query for each participant.
+        # This reduces database queries from (1 + N) to exactly 3 queries.
+        return OlympicClassroom.objects.filter(event__creator=self.request.user).prefetch_related(
+            Prefetch('olympians', queryset=Olympian.objects.select_related('team'))
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -225,7 +233,9 @@ class OlympicImportView(LoginRequiredMixin, FormView):
         return self.render_to_response(context)
 
     def form_valid(self, form):
-        event = get_object_or_404(OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user)
+        event = get_object_or_404(
+            OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user
+        )
         csv_file = form.cleaned_data['file']
         
         # Разрешение конфликтов кодировки файла
@@ -374,7 +384,9 @@ class OlympicClassroomImportView(LoginRequiredMixin, FormView):
         return self.render_to_response(context)
 
     def form_valid(self, form):
-        event = get_object_or_404(OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user)
+        event = get_object_or_404(
+            OlympicEvent, pk=self.kwargs['event_id'], creator=self.request.user
+        )
         csv_file = form.cleaned_data['file']
         
         try:
