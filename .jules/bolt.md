@@ -1,0 +1,5 @@
+## 2024-10-15 - N+1 Queries in Django Templates Iterating Over Related Managers
+
+**Learning:** When Django templates iterate over a related manager (like `classroom.olympians.all`) and access nested foreign keys (like `olympian.team.name`), it can trigger severe N+1 query bottlenecks if the original view's queryset doesn't prefetch the data. Relying on `get_context_data` to pass individual objects isn't enough when relations are navigated through template variables. In this codebase, accessing `olympian.team.name` inside the loop over `classroom.olympians.all` in `OlympicClassroomDetailView` caused one extra query per participant, resulting in 58 queries for 50 students.
+
+**Action:** Whenever a template iterates over related objects and accesses their foreign keys, optimize the parent view's `get_queryset` using `.prefetch_related(Prefetch('related_name', queryset=Model.objects.select_related('nested_fk')))`. Avoid applying this indiscriminately to `UpdateView` or `DeleteView` to prevent overfetching; target `DetailView` or `ListView` where the iteration actually occurs.
