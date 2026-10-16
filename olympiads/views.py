@@ -96,7 +96,13 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'classroom'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        from django.db.models import Prefetch
+        # ⚡ Bolt Optimization: Fix N+1 query problem by prefetching olympians and their teams
+        return OlympicClassroom.objects.filter(
+            event__creator=self.request.user
+        ).prefetch_related(
+            Prefetch('olympians', queryset=Olympian.objects.select_related('team'))
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
