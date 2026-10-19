@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import csv
 import io
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -34,7 +34,8 @@ class OlympicEventDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'event'
 
     def get_queryset(self):
-        return OlympicEvent.objects.filter(creator=self.request.user)
+        # ⚡ Bolt: prefetch classrooms to prevent N+1 query in the view's get_context_data
+        return OlympicEvent.objects.filter(creator=self.request.user).prefetch_related('classrooms')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -96,7 +97,12 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'classroom'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        # ⚡ Bolt: prefetch olympians with select_related on team to avoid N+1 queries in template
+        # Also prefetch teams to optimize context data retrieval
+        return OlympicClassroom.objects.filter(event__creator=self.request.user).prefetch_related(
+            Prefetch('olympians', queryset=Olympian.objects.select_related('team')),
+            'teams'
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
