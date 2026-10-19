@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
@@ -12,9 +13,13 @@ class ClassroomListView(LoginRequiredMixin, ListView):
     model = Classroom
     context_object_name = "classrooms"
     ordering = 'number'
-    
+
     def get_queryset(self):
-        return Classroom.objects.filter(teacher=self.request.user)
+        # ⚡ Bolt: Added annotate(student_count=Count('students')) to prevent N+1 queries
+        # when displaying the count of students in the template loop without loading them
+        return Classroom.objects.filter(
+            teacher=self.request.user
+        ).annotate(student_count=Count('students'))
 
 
 # 2. Детальная информация о классе
@@ -28,7 +33,7 @@ class ClassroomDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Ученики уже доступны через classroom.students.all, 
+        # Ученики уже доступны через classroom.students.all,
         # но здесь можно добавить форму или статистику
         return context
 
