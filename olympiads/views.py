@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import csv
 import io
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -96,7 +96,10 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'classroom'
 
     def get_queryset(self):
-        return OlympicClassroom.objects.filter(event__creator=self.request.user)
+        return OlympicClassroom.objects.filter(event__creator=self.request.user).prefetch_related(
+            Prefetch('olympians', queryset=Olympian.objects.select_related('team')),
+            'teams'
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
