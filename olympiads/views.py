@@ -100,7 +100,9 @@ class OlympicClassroomDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['olympians'] = self.object.olympians.all()
+        # Оптимизация: Используем select_related для team, чтобы избежать N+1 запросов
+        # при рендеринге шаблона, где перебираются участники и выводится название команды
+        context['olympians'] = self.object.olympians.select_related('team').all()
         context['teams'] = self.object.teams.all()
         return context
 
