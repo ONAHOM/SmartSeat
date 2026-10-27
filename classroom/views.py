@@ -22,6 +22,10 @@ class ClassroomDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Classroom
     context_object_name = "classroom"
 
+    def get_queryset(self):
+        # ⚡ Bolt: Optimized with prefetch_related to prevent N+1 queries when iterating over classroom.students.all in the template
+        return Classroom.objects.prefetch_related('students')
+
     def test_func(self):
         obj = self.get_object()
         return obj.teacher == self.request.user
