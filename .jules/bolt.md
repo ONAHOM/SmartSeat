@@ -1,0 +1,4 @@
+
+## 2023-10-27 - DetailView N+1 Optimization and Context Caching
+**Learning:** When addressing N+1 query problems in Django DetailViews by adding `prefetch_related` to `get_queryset`, modifying or removing existing `get_context_data` context assignments (like `context['olympians'] = self.object.olympians.all()`) can break template rendering if the template expects those exact variable names. The ORM will still utilize the prefetched cache when `all()` is called in `get_context_data`, meaning the original goal of preventing N+1 queries is still achieved without needing to change the context structure.
+**Action:** When implementing `prefetch_related` in `get_queryset`, retain the existing `get_context_data` implementations unless specifically refactoring the template structure as well. The prefetch cache makes those subsequent `.all()` calls in Python memory.
