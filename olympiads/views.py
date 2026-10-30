@@ -25,7 +25,9 @@ class OlympicEventListView(LoginRequiredMixin, ListView):
     context_object_name = 'events'
 
     def get_queryset(self):
-        return OlympicEvent.objects.filter(creator=self.request.user)
+        from django.db.models import Count
+        # ⚡ Bolt: Use annotate to prevent N+1 queries when accessing classrooms count and exists in template
+        return OlympicEvent.objects.filter(creator=self.request.user).annotate(classrooms_count=Count('classrooms'))
 
 
 class OlympicEventDetailView(LoginRequiredMixin, DetailView):
