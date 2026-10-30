@@ -4,6 +4,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 from .models import Classroom
 
 
@@ -14,7 +15,11 @@ class ClassroomListView(LoginRequiredMixin, ListView):
     ordering = 'number'
     
     def get_queryset(self):
-        return Classroom.objects.filter(teacher=self.request.user)
+        # ⚡ Bolt: Prevent N+1 queries in template loop over classrooms
+        # by annotating the student count here instead of hitting .count() on each iteration.
+        return Classroom.objects.filter(teacher=self.request.user).annotate(
+            students_count=Count('students')
+        )
 
 
 # 2. Детальная информация о классе
