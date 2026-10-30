@@ -1,3 +1,7 @@
 ## 2024-10-27 - N+1 Query in Django DetailView
 **Learning:** Found a specific N+1 query issue in `OlympicClassroomDetailView` where `olympians` and their associated `team` are accessed in `templates/olympiads/classroom_detail.html` rendering. Using `prefetch_related` along with a custom `Prefetch` containing `select_related` on the original queryset solves this effectively.
 **Action:** When working on similar Django apps, look for nested relationships used inside template loops, and fetch them using custom `Prefetch` querysets.
+
+## 2024-10-30 - Context Processor N+1 & Annotate Optimization
+**Learning:** In Django templates, iterating over global variables from `context_processors` (like `sidebar_classes`) in the main page view (e.g., `ClassroomListView`) instead of the view's specific context variables (e.g., `classrooms`) causes hidden N+1 queries. Additionally, when needing only related counts or existence checks (`.count` and `.exists()` in templates) in a `ListView`, `annotate(Count('...'))` is far superior to `prefetch_related` as it offloads the counting to the database and avoids instantiating large lists of objects in memory.
+**Action:** When optimizing a `ListView` displaying `.count` or `.exists()` of related items, replace it with `annotate` and adjust the template to use the annotated property. Ensure main templates iterate over view-supplied context variables, not context processor globals.

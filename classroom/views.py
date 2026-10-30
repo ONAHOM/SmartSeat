@@ -14,7 +14,9 @@ class ClassroomListView(LoginRequiredMixin, ListView):
     ordering = 'number'
     
     def get_queryset(self):
-        return Classroom.objects.filter(teacher=self.request.user)
+        from django.db.models import Count
+        # ⚡ Bolt: Use annotate to prevent N+1 queries when accessing students count in template
+        return Classroom.objects.filter(teacher=self.request.user).annotate(students_count=Count('students'))
 
 
 # 2. Детальная информация о классе
