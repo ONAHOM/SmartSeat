@@ -85,12 +85,12 @@
 <h2 style="margin-bottom: 30px;">Мои учебные кабинеты</h2>
 
 <div class="classroom-grid">
-    {% for cls in sidebar_classes %}
+    {% for cls in classrooms %}
     <a href="{% url 'classroom:detail' cls.pk %}" class="class-card">
         <div>
             <div class="class-header">{{ cls.number }}-{{ cls.letter }}</div>
             <div class="class-info">
-                👥 Учеников: {{ cls.students.count }}<br>
+                👥 Учеников: {{ cls.students_count }}<br>
                 📏 Мест: {{ cls.rows_count|multiply:cls.desks_per_row|multiply:2 }}
             </div>
         </div>
