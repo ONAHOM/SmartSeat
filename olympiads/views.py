@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import csv
 import io
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Count
 
 from .models import OlympicEvent, OlympicClassroom, Team, Olympian
 from .forms import OlympicEventForm, OlympicClassroomForm, OlympianForm, OlympicImportForm
@@ -25,7 +25,10 @@ class OlympicEventListView(LoginRequiredMixin, ListView):
     context_object_name = 'events'
 
     def get_queryset(self):
-        return OlympicEvent.objects.filter(creator=self.request.user)
+        # ⚡ Bolt: Eliminate N+1 query in event_list.html
+        return OlympicEvent.objects.filter(
+            creator=self.request.user
+        ).annotate(classrooms_count=Count('classrooms'))
 
 
 class OlympicEventDetailView(LoginRequiredMixin, DetailView):
