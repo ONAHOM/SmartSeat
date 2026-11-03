@@ -92,7 +92,7 @@
             <div class="class-info">
                 📌 Направление: {{ event.subject|default:"Не указано" }}<br>
                 📅 Дата: {{ event.date|date:"d.m.Y H:i"|default:"Не назначена" }}<br>
-                🏫 Аудиторий задействовано: {{ event.classrooms.count }}
+                🏫 Аудиторий задействовано: {{ event.classrooms_count }}
             </div>
         </div>
         
