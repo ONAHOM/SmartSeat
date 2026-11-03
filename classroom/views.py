@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
@@ -12,9 +13,11 @@ class ClassroomListView(LoginRequiredMixin, ListView):
     model = Classroom
     context_object_name = "classrooms"
     ordering = 'number'
-    
+
     def get_queryset(self):
-        return Classroom.objects.filter(teacher=self.request.user)
+        return Classroom.objects.filter(
+            teacher=self.request.user
+        ).annotate(students_count=Count('students'))
 
 
 # 2. Детальная информация о классе
@@ -28,7 +31,7 @@ class ClassroomDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Ученики уже доступны через classroom.students.all, 
+        # Ученики уже доступны через classroom.students.all,
         # но здесь можно добавить форму или статистику
         return context
 
